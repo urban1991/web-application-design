@@ -26,7 +26,7 @@ export default defineConfig([
         extends: ['js/recommended'],
         languageOptions: { globals: globals.browser },
     },
-    { files: ['**/*.js'], languageOptions: { sourceType: 'commonjs' } },
+    { files: ['**/*.js'], languageOptions: { sourceType: 'commonjs', globals: globals.node } },
     tseslint.configs.recommended,
     pluginReact.configs.flat.recommended,
 
@@ -42,20 +42,7 @@ export default defineConfig([
             },
         },
         rules: {
-            'prettier/prettier': [
-                'error',
-                {
-                    printWidth: 100,
-                    tabWidth: 4,
-                    useTabs: false,
-                    semi: false,
-                    singleQuote: true,
-                    trailingComma: 'es5',
-                    bracketSpacing: true,
-                    bracketSameLine: false,
-                    arrowParens: 'avoid',
-                },
-            ],
+            'prettier/prettier': ['error'],
             'no-console': 'error',
             '@typescript-eslint/no-namespace': 'warn',
             'no-restricted-imports': ['error', 'lodash/get'],
