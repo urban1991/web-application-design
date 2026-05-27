@@ -60,7 +60,9 @@ function TeamCard({ row, canEdit, onEdit, onDelete, onClick }: TeamCardProps) {
     return (
         <Card variant="outlined" sx={{ mb: 1, cursor: 'pointer' }} onClick={onClick}>
             <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Box
+                    sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                >
                     <Box>
                         <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
                             {row.name}
@@ -203,7 +205,9 @@ export default function Teams() {
                     {isMobile ? (
                         <Stack>
                             {teams.length === 0 ? (
-                                <Typography sx={{ color: 'text.secondary', textAlign: 'center', mt: 2 }}>
+                                <Typography
+                                    sx={{ color: 'text.secondary', textAlign: 'center', mt: 2 }}
+                                >
                                     {t('common.noData')}
                                 </Typography>
                             ) : (

@@ -64,11 +64,24 @@ interface TournamentCardProps {
     onClick: () => void
 }
 
-function TournamentCard({ row, canEdit, statusColor, onEdit, onDelete, onClick }: TournamentCardProps) {
+function TournamentCard({
+    row,
+    canEdit,
+    statusColor,
+    onEdit,
+    onDelete,
+    onClick,
+}: TournamentCardProps) {
     return (
         <Card variant="outlined" sx={{ mb: 1, cursor: 'pointer' }} onClick={onClick}>
             <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <Box
+                    sx={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'flex-start',
+                    }}
+                >
                     <Box sx={{ flex: 1, mr: 1 }}>
                         <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
                             {row.name}
@@ -83,7 +96,14 @@ function TournamentCard({ row, canEdit, statusColor, onEdit, onDelete, onClick }
                             </Typography>
                         )}
                     </Box>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 0.5 }}>
+                    <Box
+                        sx={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'flex-end',
+                            gap: 0.5,
+                        }}
+                    >
                         <Chip label={row.status} color={statusColor(row.status)} size="small" />
                         {canEdit && (
                             <Box onClick={e => e.stopPropagation()}>
@@ -258,7 +278,9 @@ export default function Tournaments() {
                     {isMobile ? (
                         <Stack>
                             {tournaments.length === 0 ? (
-                                <Typography sx={{ color: 'text.secondary', textAlign: 'center', mt: 2 }}>
+                                <Typography
+                                    sx={{ color: 'text.secondary', textAlign: 'center', mt: 2 }}
+                                >
                                     {t('common.noData')}
                                 </Typography>
                             ) : (
@@ -305,12 +327,15 @@ export default function Tournaments() {
                                             >
                                                 <TableCell>{row.name}</TableCell>
                                                 <TableCell>{row.sport}</TableCell>
-                                                <TableCell>{row.start_date?.split('T')[0]}</TableCell>
+                                                <TableCell>
+                                                    {row.start_date?.split('T')[0]}
+                                                </TableCell>
                                                 <TableCell>{row.end_date?.split('T')[0]}</TableCell>
                                                 <TableCell>
                                                     <Chip
                                                         label={
-                                                            t(`tournament.${row.status}`) || row.status
+                                                            t(`tournament.${row.status}`) ||
+                                                            row.status
                                                         }
                                                         color={
                                                             statusColor(row.status) as

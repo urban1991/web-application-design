@@ -206,7 +206,7 @@ export default function TeamDetail() {
                             </Button>
                         )}
                     </Box>
-                    <TableContainer>
+                    <TableContainer sx={{ overflowX: 'auto' }}>
                         <Table size="small">
                             <TableHead>
                                 <TableRow>

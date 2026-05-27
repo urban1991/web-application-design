@@ -224,7 +224,7 @@ export default function TournamentDetail() {
             </Typography>
             <Card sx={{ mb: 3 }}>
                 <CardContent>
-                    <TableContainer>
+                    <TableContainer sx={{ overflowX: 'auto' }}>
                         <Table size="small">
                             <TableHead>
                                 <TableRow>
@@ -303,7 +303,7 @@ export default function TournamentDetail() {
                     </Typography>
                     <Card>
                         <CardContent>
-                            <TableContainer>
+                            <TableContainer sx={{ overflowX: 'auto' }}>
                                 <Table size="small">
                                     <TableHead>
                                         <TableRow>

@@ -69,7 +69,9 @@ function PlayerCard({ row, canEdit, onEdit, onDelete }: PlayerCardProps) {
     return (
         <Card variant="outlined" sx={{ mb: 1 }}>
             <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Box
+                    sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                >
                     <Box>
                         <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
                             {row.firstname} {row.lastname}
@@ -258,7 +260,9 @@ export default function Players() {
                     {isMobile ? (
                         <Stack>
                             {players.length === 0 ? (
-                                <Typography sx={{ color: 'text.secondary', textAlign: 'center', mt: 2 }}>
+                                <Typography
+                                    sx={{ color: 'text.secondary', textAlign: 'center', mt: 2 }}
+                                >
                                     {t('common.noData')}
                                 </Typography>
                             ) : (

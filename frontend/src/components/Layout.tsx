@@ -28,9 +28,9 @@ import {
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
+import BottomNav from './BottomNav'
 import LanguageSwitcher from './LanguageSwitcher'
 import ThemeToggle from './ThemeToggle'
-import BottomNav from './BottomNav'
 import { useAuth } from '../hooks/useAuth'
 
 const DRAWER_WIDTH = 240
@@ -136,9 +136,16 @@ export default function Layout({ themeMode, onToggleTheme }: Props) {
                     <Typography variant="body2" sx={{ mr: 2 }}>
                         {user?.username}
                     </Typography>
-                    <LanguageSwitcher />
-                    <ThemeToggle mode={themeMode} onToggle={onToggleTheme} />
-                    <Button color="inherit" onClick={handleLogout} startIcon={<LogoutIcon />}>
+                    <Box sx={{ display: { xs: 'none', sm: 'flex' }, alignItems: 'center' }}>
+                        <LanguageSwitcher />
+                        <ThemeToggle mode={themeMode} onToggle={onToggleTheme} />
+                    </Box>
+                    <Button
+                        color="inherit"
+                        onClick={handleLogout}
+                        startIcon={<LogoutIcon />}
+                        sx={{ display: { xs: 'none', sm: 'flex' } }}
+                    >
                         {t('nav.logout')}
                     </Button>
                 </Toolbar>
@@ -173,6 +180,7 @@ export default function Layout({ themeMode, onToggleTheme }: Props) {
                 component="main"
                 sx={{
                     flexGrow: 1,
+                    minWidth: 0,
                     p: 3,
                     width: { sm: `calc(100% - ${DRAWER_WIDTH}px)` },
                     mt: '64px',
