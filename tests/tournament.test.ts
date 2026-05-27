@@ -62,7 +62,7 @@ describe('tournament API', () => {
         expect(res.body.name).toBe('Nowa nazwa');
     });
 
-    it('DELETE /:id removes a tournament', async () => {
+    it('endpoint DELETE /:id removes a tournament', async () => {
         const create = await request(app).post('/api/tournament').send({ name: 'Do usunięcia', sport: 'Siatkówka' });
         const id = create.body.id;
         const res = await request(app).delete(`/api/tournament/${id}`);
@@ -113,7 +113,7 @@ describe('tournament API', () => {
         expect(count).toBe(1);
     });
 
-    it('DELETE /:id/team/:teamId removes team from tournament', async () => {
+    it('endpoint DELETE /:id/team/:teamId removes team from tournament', async () => {
         const t = await request(app).post('/api/tournament').send({ name: 'T2', sport: 'S' });
         const tid = t.body.id;
         db.prepare('INSERT INTO teams (name, shortname) VALUES (?, ?)').run('Drużyna B', 'DB');

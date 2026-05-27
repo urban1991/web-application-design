@@ -21,7 +21,7 @@ function makeApp() {
         next();
     });
     
-    app.use('/api/player', playerRouter(db, db));
+    app.use('/api/player', playerRouter(db));
     app.use((err: any, _req: any, res: any, _next: any) => res.status(err.status || 400).json({ error: err.message }));
 
     return { app, db };
@@ -74,7 +74,7 @@ describe('player API', () => {
         expect(res.body.firstname).toBe('Arkadiusz');
     });
 
-    it('DELETE /:id removes player', async () => {
+    it('endpoint DELETE /:id removes player', async () => {
         const create = await request(app).post('/api/player').send({ firstname: 'Do', lastname: 'Usunięcia' });
         const id = create.body.id;
         const res = await request(app).delete(`/api/player/${id}`);

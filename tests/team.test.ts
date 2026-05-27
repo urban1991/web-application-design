@@ -22,7 +22,7 @@ function makeApp() {
         next();
     });
     
-    app.use('/api/team', teamRouter(db, db));
+    app.use('/api/team', teamRouter(db));
     app.use((err: any, _req: any, res: any, _next: any) => res.status(err.status || 400).json({ error: err.message }));
 
     return { app, db };
@@ -77,7 +77,7 @@ describe('team API', () => {
         expect(res.body.players[0].firstname).toBe('Jan');
     });
 
-    it('DELETE /:id removes team', async () => {
+    it('endpoint DELETE /:id removes team', async () => {
         const create = await request(app).post('/api/team').send({ name: 'Do usunięcia', shortname: 'DU' });
         const id = create.body.id;
         const res = await request(app).delete(`/api/team/${id}`);
