@@ -1,0 +1,17 @@
+/dist
+/frontend/dist
+node_modules
+.vscode
+.DS_Store
+*.code-workspace
+.claude/
+.gemini/
+claude.md
+GEMINI.md
+.env
+.idea/
+.antigravitycli/
+.agent/
+/.agent/
+.superpowers/
+/docs/superpowers/

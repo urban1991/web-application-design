@@ -7,7 +7,11 @@
     "test": "vitest run",
     "dev": "ts-node-dev --respawn --watch .env src/index.ts",
     "build": "tsc",
-    "createdb": "node tools/createdb.mjs"
+    "createdb": "node tools/createdb.mjs",
+    "lint": "eslint src tests",
+    "lint:fix": "eslint src tests --fix",
+    "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.ts\" \"tests/**/*.ts\""
   },
   "repository": {
     "type": "git",
@@ -46,6 +50,7 @@
     "ws": "^8.21.0"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/better-sqlite3": "^7.6.13",
     "@types/express": "^5.0.6",
     "@types/morgan": "^1.9.10",
@@ -54,7 +59,12 @@
     "@types/pdfkit": "^0.17.6",
     "@types/supertest": "^7.2.0",
     "@types/ws": "^8.18.1",
+    "@typescript-eslint/eslint-plugin": "^8.60.0",
+    "@typescript-eslint/parser": "^8.60.0",
     "better-sqlite3": "^12.10.0",
+    "eslint": "^10.4.0",
+    "eslint-config-prettier": "^10.1.8",
+    "prettier": "^3.8.3",
     "supertest": "^7.2.2",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.9.3",
