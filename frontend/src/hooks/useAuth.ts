@@ -13,11 +13,7 @@ export interface User {
 interface AuthCtx {
     user: User | null | undefined
     loading: boolean
-    login: (
-        u: string,
-        p: string,
-        mfa?: string
-    ) => Promise<{ mfa_required?: boolean }>
+    login: (user: string, password: string, mfa?: string) => Promise<{ mfa_required?: boolean }>
     logout: () => Promise<void>
     refresh: () => Promise<void>
 }
@@ -46,11 +42,7 @@ export function useAuthProvider(): AuthCtx {
         refresh()
     }, [])
 
-    const login = async (
-        username: string,
-        password: string,
-        mfa_token?: string
-    ) => {
+    const login = async (username: string, password: string, mfa_token?: string) => {
         const res = await api.post<User & { mfa_required?: boolean }>('/api/auth/login', {
             username,
             password,

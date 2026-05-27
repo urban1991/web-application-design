@@ -1,10 +1,11 @@
 import { ThemeProvider, CssBaseline } from '@mui/material'
 import React from 'react'
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import Layout from './components/Layout'
 import ProtectedRoute from './components/ProtectedRoute'
 import { AuthContext, useAuthProvider } from './hooks/useAuth'
+import i18n from './i18n'
 import Audit from './pages/Audit'
 import Dashboard from './pages/Dashboard'
 import ImportPage from './pages/ImportPage'
@@ -24,9 +25,23 @@ export default function App() {
     )
     const theme = useMemo(() => buildTheme(themeMode), [themeMode])
 
+    useEffect(() => {
+        if (auth.user?.theme) {
+            setThemeMode(auth.user.theme as 'light' | 'dark')
+            localStorage.setItem('theme', auth.user.theme)
+        }
+    }, [auth.user?.theme])
+
+    useEffect(() => {
+        if (auth.user?.language) {
+            i18n.changeLanguage(auth.user.language)
+            localStorage.setItem('language', auth.user.language)
+        }
+    }, [auth.user?.language])
+
     const toggleTheme = () => {
-        setThemeMode(m => {
-            const next = m === 'light' ? 'dark' : 'light'
+        setThemeMode(mode => {
+            const next = mode === 'light' ? 'dark' : 'light'
             localStorage.setItem('theme', next)
             return next
         })

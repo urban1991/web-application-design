@@ -30,11 +30,7 @@ export default function Login() {
         setError(null)
         setLoading(true)
         try {
-            const res = await login(
-                username,
-                password,
-                mfaStep ? mfaToken : undefined
-            )
+            const res = await login(username, password, mfaStep ? mfaToken : undefined)
             if (res.mfa_required) {
                 setMfaStep(true)
             } else {
