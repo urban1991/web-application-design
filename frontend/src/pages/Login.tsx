@@ -1,4 +1,3 @@
-import HCaptcha from '@hcaptcha/react-hcaptcha'
 import {
     Box,
     Card,
@@ -9,7 +8,7 @@ import {
     Alert,
     CircularProgress,
 } from '@mui/material'
-import React, { useState, useRef } from 'react'
+import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
@@ -18,13 +17,11 @@ export default function Login() {
     const { t } = useTranslation()
     const { login } = useAuth()
     const navigate = useNavigate()
-    const captchaRef = useRef<HCaptcha>(null)
 
     const [username, setUsername] = useState('')
     const [password, setPassword] = useState('')
     const [mfaToken, setMfaToken] = useState('')
     const [mfaStep, setMfaStep] = useState(false)
-    const [captchaToken, setCaptchaToken] = useState<string | null>(null)
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
 
@@ -36,8 +33,7 @@ export default function Login() {
             const res = await login(
                 username,
                 password,
-                mfaStep ? mfaToken : undefined,
-                !mfaStep ? (captchaToken ?? undefined) : undefined
+                mfaStep ? mfaToken : undefined
             )
             if (res.mfa_required) {
                 setMfaStep(true)
@@ -46,8 +42,6 @@ export default function Login() {
             }
         } catch (err) {
             setError(err instanceof Error ? err.message : t('common.error'))
-            captchaRef.current?.resetCaptcha()
-            setCaptchaToken(null)
         } finally {
             setLoading(false)
         }
@@ -111,20 +105,6 @@ export default function Login() {
                                     fullWidth
                                     autoComplete="current-password"
                                 />
-                                <Box
-                                    sx={{
-                                        display: 'flex',
-                                        justifyContent: 'center',
-                                    }}
-                                >
-                                    <HCaptcha
-                                        ref={captchaRef}
-                                        sitekey="10000000-ffff-ffff-ffff-000000000001"
-                                        size="normal"
-                                        onVerify={token => setCaptchaToken(token)}
-                                        onExpire={() => setCaptchaToken(null)}
-                                    />
-                                </Box>
                             </>
                         ) : (
                             <>
@@ -155,7 +135,7 @@ export default function Login() {
                             variant="contained"
                             fullWidth
                             size="large"
-                            disabled={loading || (!mfaStep && !captchaToken)}
+                            disabled={loading}
                         >
                             {loading ? <CircularProgress size={24} /> : t('auth.login')}
                         </Button>

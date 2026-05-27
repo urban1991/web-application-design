@@ -16,8 +16,7 @@ interface AuthCtx {
     login: (
         u: string,
         p: string,
-        mfa?: string,
-        captcha?: string
+        mfa?: string
     ) => Promise<{ mfa_required?: boolean }>
     logout: () => Promise<void>
     refresh: () => Promise<void>
@@ -50,14 +49,12 @@ export function useAuthProvider(): AuthCtx {
     const login = async (
         username: string,
         password: string,
-        mfa_token?: string,
-        captcha_token?: string
+        mfa_token?: string
     ) => {
         const res = await api.post<User & { mfa_required?: boolean }>('/api/auth/login', {
             username,
             password,
             mfa_token,
-            captcha_token,
         })
         if (res.mfa_required) return { mfa_required: true }
         setUser(res)
