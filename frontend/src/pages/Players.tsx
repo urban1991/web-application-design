@@ -26,6 +26,11 @@ import {
     Select,
     FormControl,
     InputLabel,
+    Card,
+    CardContent,
+    Stack,
+    useTheme,
+    useMediaQuery,
 } from '@mui/material'
 import React, { useState, useEffect, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -53,6 +58,42 @@ interface PagedResult {
 
 const PAGE_SIZE = 20
 
+interface PlayerCardProps {
+    row: Player
+    canEdit: boolean
+    onEdit: () => void
+    onDelete: () => void
+}
+
+function PlayerCard({ row, canEdit, onEdit, onDelete }: PlayerCardProps) {
+    return (
+        <Card variant="outlined" sx={{ mb: 1 }}>
+            <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Box>
+                        <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                            {row.firstname} {row.lastname}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                            {row.position ?? '-'} · {row.team_name ?? '-'}
+                        </Typography>
+                    </Box>
+                    {canEdit && (
+                        <Box>
+                            <IconButton size="small" onClick={onEdit}>
+                                <EditIcon fontSize="small" />
+                            </IconButton>
+                            <IconButton size="small" color="error" onClick={onDelete}>
+                                <DeleteIcon fontSize="small" />
+                            </IconButton>
+                        </Box>
+                    )}
+                </Box>
+            </CardContent>
+        </Card>
+    )
+}
+
 export default function Players() {
     const { t } = useTranslation()
     const { user } = useAuth()
@@ -69,6 +110,8 @@ export default function Players() {
     const [snack, setSnack] = useState<{ msg: string; sev: 'success' | 'error' } | null>(null)
 
     const canEdit = user?.roles?.some(r => r === 0 || r === 1)
+    const theme = useTheme()
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
 
     const load = useCallback(async () => {
         setLoading(true)
@@ -212,54 +255,74 @@ export default function Players() {
                 </Box>
             ) : (
                 <>
-                    <TableContainer component={Paper}>
-                        <Table size="small">
-                            <TableHead>
-                                <TableRow>
-                                    <TableCell>{t('player.firstname')}</TableCell>
-                                    <TableCell>{t('player.lastname')}</TableCell>
-                                    <TableCell>{t('player.position')}</TableCell>
-                                    <TableCell>{t('player.team')}</TableCell>
-                                    {canEdit && <TableCell>{t('common.actions')}</TableCell>}
-                                </TableRow>
-                            </TableHead>
-                            <TableBody>
-                                {players.length === 0 ? (
+                    {isMobile ? (
+                        <Stack>
+                            {players.length === 0 ? (
+                                <Typography sx={{ color: 'text.secondary', textAlign: 'center', mt: 2 }}>
+                                    {t('common.noData')}
+                                </Typography>
+                            ) : (
+                                players.map(row => (
+                                    <PlayerCard
+                                        key={row.id}
+                                        row={row}
+                                        canEdit={!!canEdit}
+                                        onEdit={() => openEdit(row)}
+                                        onDelete={() => handleDelete(row.id)}
+                                    />
+                                ))
+                            )}
+                        </Stack>
+                    ) : (
+                        <TableContainer component={Paper}>
+                            <Table size="small">
+                                <TableHead>
                                     <TableRow>
-                                        <TableCell colSpan={5} align="center">
-                                            {t('common.noData')}
-                                        </TableCell>
+                                        <TableCell>{t('player.firstname')}</TableCell>
+                                        <TableCell>{t('player.lastname')}</TableCell>
+                                        <TableCell>{t('player.position')}</TableCell>
+                                        <TableCell>{t('player.team')}</TableCell>
+                                        {canEdit && <TableCell>{t('common.actions')}</TableCell>}
                                     </TableRow>
-                                ) : (
-                                    players.map(row => (
-                                        <TableRow key={row.id} hover>
-                                            <TableCell>{row.firstname}</TableCell>
-                                            <TableCell>{row.lastname}</TableCell>
-                                            <TableCell>{row.position ?? '-'}</TableCell>
-                                            <TableCell>{row.team_name ?? '-'}</TableCell>
-                                            {canEdit && (
-                                                <TableCell>
-                                                    <IconButton
-                                                        size="small"
-                                                        onClick={() => openEdit(row)}
-                                                    >
-                                                        <EditIcon fontSize="small" />
-                                                    </IconButton>
-                                                    <IconButton
-                                                        size="small"
-                                                        color="error"
-                                                        onClick={() => handleDelete(row.id)}
-                                                    >
-                                                        <DeleteIcon fontSize="small" />
-                                                    </IconButton>
-                                                </TableCell>
-                                            )}
+                                </TableHead>
+                                <TableBody>
+                                    {players.length === 0 ? (
+                                        <TableRow>
+                                            <TableCell colSpan={5} align="center">
+                                                {t('common.noData')}
+                                            </TableCell>
                                         </TableRow>
-                                    ))
-                                )}
-                            </TableBody>
-                        </Table>
-                    </TableContainer>
+                                    ) : (
+                                        players.map(row => (
+                                            <TableRow key={row.id} hover>
+                                                <TableCell>{row.firstname}</TableCell>
+                                                <TableCell>{row.lastname}</TableCell>
+                                                <TableCell>{row.position ?? '-'}</TableCell>
+                                                <TableCell>{row.team_name ?? '-'}</TableCell>
+                                                {canEdit && (
+                                                    <TableCell>
+                                                        <IconButton
+                                                            size="small"
+                                                            onClick={() => openEdit(row)}
+                                                        >
+                                                            <EditIcon fontSize="small" />
+                                                        </IconButton>
+                                                        <IconButton
+                                                            size="small"
+                                                            color="error"
+                                                            onClick={() => handleDelete(row.id)}
+                                                        >
+                                                            <DeleteIcon fontSize="small" />
+                                                        </IconButton>
+                                                    </TableCell>
+                                                )}
+                                            </TableRow>
+                                        ))
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
+                    )}
                     <Box
                         sx={{
                             display: 'flex',

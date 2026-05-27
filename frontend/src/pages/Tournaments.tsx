@@ -27,6 +27,11 @@ import {
     CircularProgress,
     Snackbar,
     Alert,
+    Card,
+    CardContent,
+    Stack,
+    useTheme,
+    useMediaQuery,
 } from '@mui/material'
 import React, { useState, useEffect, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -50,6 +55,53 @@ interface PagedResult {
 
 const PAGE_SIZE = 20
 
+interface TournamentCardProps {
+    row: Tournament
+    canEdit: boolean
+    statusColor: (s: string) => 'success' | 'default' | 'warning'
+    onEdit: () => void
+    onDelete: () => void
+    onClick: () => void
+}
+
+function TournamentCard({ row, canEdit, statusColor, onEdit, onDelete, onClick }: TournamentCardProps) {
+    return (
+        <Card variant="outlined" sx={{ mb: 1, cursor: 'pointer' }} onClick={onClick}>
+            <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <Box sx={{ flex: 1, mr: 1 }}>
+                        <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                            {row.name}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                            {row.sport}
+                        </Typography>
+                        {row.start_date && (
+                            <Typography variant="caption" color="text.secondary">
+                                {row.start_date.split('T')[0]}
+                                {row.end_date ? ` – ${row.end_date.split('T')[0]}` : ''}
+                            </Typography>
+                        )}
+                    </Box>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 0.5 }}>
+                        <Chip label={row.status} color={statusColor(row.status)} size="small" />
+                        {canEdit && (
+                            <Box onClick={e => e.stopPropagation()}>
+                                <IconButton size="small" onClick={onEdit}>
+                                    <EditIcon fontSize="small" />
+                                </IconButton>
+                                <IconButton size="small" color="error" onClick={onDelete}>
+                                    <DeleteIcon fontSize="small" />
+                                </IconButton>
+                            </Box>
+                        )}
+                    </Box>
+                </Box>
+            </CardContent>
+        </Card>
+    )
+}
+
 export default function Tournaments() {
     const { t } = useTranslation()
     const { user } = useAuth()
@@ -72,6 +124,8 @@ export default function Tournaments() {
     const [snack, setSnack] = useState<{ msg: string; sev: 'success' | 'error' } | null>(null)
 
     const canEdit = user?.roles?.some(r => r === 0 || r === 1)
+    const theme = useTheme()
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
 
     const load = useCallback(async () => {
         setLoading(true)
@@ -201,74 +255,96 @@ export default function Tournaments() {
                 </Box>
             ) : (
                 <>
-                    <TableContainer component={Paper}>
-                        <Table size="small">
-                            <TableHead>
-                                <TableRow>
-                                    <TableCell>{t('tournament.name')}</TableCell>
-                                    <TableCell>{t('tournament.sport')}</TableCell>
-                                    <TableCell>{t('tournament.startDate')}</TableCell>
-                                    <TableCell>{t('tournament.endDate')}</TableCell>
-                                    <TableCell>{t('tournament.status')}</TableCell>
-                                    {canEdit && <TableCell>{t('common.actions')}</TableCell>}
-                                </TableRow>
-                            </TableHead>
-                            <TableBody>
-                                {tournaments.length === 0 ? (
+                    {isMobile ? (
+                        <Stack>
+                            {tournaments.length === 0 ? (
+                                <Typography sx={{ color: 'text.secondary', textAlign: 'center', mt: 2 }}>
+                                    {t('common.noData')}
+                                </Typography>
+                            ) : (
+                                tournaments.map(row => (
+                                    <TournamentCard
+                                        key={row.id}
+                                        row={row}
+                                        canEdit={!!canEdit}
+                                        statusColor={statusColor}
+                                        onEdit={() => openEdit(row)}
+                                        onDelete={() => handleDelete(row.id)}
+                                        onClick={() => navigate(`/tournaments/${row.id}`)}
+                                    />
+                                ))
+                            )}
+                        </Stack>
+                    ) : (
+                        <TableContainer component={Paper}>
+                            <Table size="small">
+                                <TableHead>
                                     <TableRow>
-                                        <TableCell colSpan={6} align="center">
-                                            {t('common.noData')}
-                                        </TableCell>
+                                        <TableCell>{t('tournament.name')}</TableCell>
+                                        <TableCell>{t('tournament.sport')}</TableCell>
+                                        <TableCell>{t('tournament.startDate')}</TableCell>
+                                        <TableCell>{t('tournament.endDate')}</TableCell>
+                                        <TableCell>{t('tournament.status')}</TableCell>
+                                        {canEdit && <TableCell>{t('common.actions')}</TableCell>}
                                     </TableRow>
-                                ) : (
-                                    tournaments.map(row => (
-                                        <TableRow
-                                            key={row.id}
-                                            hover
-                                            sx={{ cursor: 'pointer' }}
-                                            onClick={() => navigate(`/tournaments/${row.id}`)}
-                                        >
-                                            <TableCell>{row.name}</TableCell>
-                                            <TableCell>{row.sport}</TableCell>
-                                            <TableCell>{row.start_date?.split('T')[0]}</TableCell>
-                                            <TableCell>{row.end_date?.split('T')[0]}</TableCell>
-                                            <TableCell>
-                                                <Chip
-                                                    label={
-                                                        t(`tournament.${row.status}`) || row.status
-                                                    }
-                                                    color={
-                                                        statusColor(row.status) as
-                                                            | 'success'
-                                                            | 'default'
-                                                            | 'warning'
-                                                    }
-                                                    size="small"
-                                                />
+                                </TableHead>
+                                <TableBody>
+                                    {tournaments.length === 0 ? (
+                                        <TableRow>
+                                            <TableCell colSpan={6} align="center">
+                                                {t('common.noData')}
                                             </TableCell>
-                                            {canEdit && (
-                                                <TableCell onClick={e => e.stopPropagation()}>
-                                                    <IconButton
-                                                        size="small"
-                                                        onClick={() => openEdit(row)}
-                                                    >
-                                                        <EditIcon fontSize="small" />
-                                                    </IconButton>
-                                                    <IconButton
-                                                        size="small"
-                                                        color="error"
-                                                        onClick={() => handleDelete(row.id)}
-                                                    >
-                                                        <DeleteIcon fontSize="small" />
-                                                    </IconButton>
-                                                </TableCell>
-                                            )}
                                         </TableRow>
-                                    ))
-                                )}
-                            </TableBody>
-                        </Table>
-                    </TableContainer>
+                                    ) : (
+                                        tournaments.map(row => (
+                                            <TableRow
+                                                key={row.id}
+                                                hover
+                                                sx={{ cursor: 'pointer' }}
+                                                onClick={() => navigate(`/tournaments/${row.id}`)}
+                                            >
+                                                <TableCell>{row.name}</TableCell>
+                                                <TableCell>{row.sport}</TableCell>
+                                                <TableCell>{row.start_date?.split('T')[0]}</TableCell>
+                                                <TableCell>{row.end_date?.split('T')[0]}</TableCell>
+                                                <TableCell>
+                                                    <Chip
+                                                        label={
+                                                            t(`tournament.${row.status}`) || row.status
+                                                        }
+                                                        color={
+                                                            statusColor(row.status) as
+                                                                | 'success'
+                                                                | 'default'
+                                                                | 'warning'
+                                                        }
+                                                        size="small"
+                                                    />
+                                                </TableCell>
+                                                {canEdit && (
+                                                    <TableCell onClick={e => e.stopPropagation()}>
+                                                        <IconButton
+                                                            size="small"
+                                                            onClick={() => openEdit(row)}
+                                                        >
+                                                            <EditIcon fontSize="small" />
+                                                        </IconButton>
+                                                        <IconButton
+                                                            size="small"
+                                                            color="error"
+                                                            onClick={() => handleDelete(row.id)}
+                                                        >
+                                                            <DeleteIcon fontSize="small" />
+                                                        </IconButton>
+                                                    </TableCell>
+                                                )}
+                                            </TableRow>
+                                        ))
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
+                    )}
                     <Box
                         sx={{
                             display: 'flex',

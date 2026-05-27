@@ -22,12 +22,15 @@ import {
     Toolbar,
     Typography,
     Button,
+    useTheme,
+    useMediaQuery,
 } from '@mui/material'
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import LanguageSwitcher from './LanguageSwitcher'
 import ThemeToggle from './ThemeToggle'
+import BottomNav from './BottomNav'
 import { useAuth } from '../hooks/useAuth'
 
 const DRAWER_WIDTH = 240
@@ -43,6 +46,8 @@ export default function Layout({ themeMode, onToggleTheme }: Props) {
     const navigate = useNavigate()
     const location = useLocation()
     const [mobileOpen, setMobileOpen] = useState(false)
+    const theme = useTheme()
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
 
     const isAdmin = user?.roles?.includes(0)
     const isOrganizerOrAdmin = user?.roles?.some(r => r === 0 || r === 1)
@@ -171,10 +176,12 @@ export default function Layout({ themeMode, onToggleTheme }: Props) {
                     p: 3,
                     width: { sm: `calc(100% - ${DRAWER_WIDTH}px)` },
                     mt: '64px',
+                    pb: { xs: 9, sm: 3 },
                 }}
             >
                 <Outlet />
             </Box>
+            {isMobile && <BottomNav />}
         </Box>
     )
 }

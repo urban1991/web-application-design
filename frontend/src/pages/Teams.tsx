@@ -22,6 +22,11 @@ import {
     CircularProgress,
     Snackbar,
     Alert,
+    Card,
+    CardContent,
+    Stack,
+    useTheme,
+    useMediaQuery,
 } from '@mui/material'
 import React, { useState, useEffect, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -43,6 +48,43 @@ interface PagedResult {
 
 const PAGE_SIZE = 20
 
+interface TeamCardProps {
+    row: Team
+    canEdit: boolean
+    onEdit: () => void
+    onDelete: () => void
+    onClick: () => void
+}
+
+function TeamCard({ row, canEdit, onEdit, onDelete, onClick }: TeamCardProps) {
+    return (
+        <Card variant="outlined" sx={{ mb: 1, cursor: 'pointer' }} onClick={onClick}>
+            <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Box>
+                        <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                            {row.name}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                            {row.shortname}
+                        </Typography>
+                    </Box>
+                    {canEdit && (
+                        <Box onClick={e => e.stopPropagation()}>
+                            <IconButton size="small" onClick={onEdit}>
+                                <EditIcon fontSize="small" />
+                            </IconButton>
+                            <IconButton size="small" color="error" onClick={onDelete}>
+                                <DeleteIcon fontSize="small" />
+                            </IconButton>
+                        </Box>
+                    )}
+                </Box>
+            </CardContent>
+        </Card>
+    )
+}
+
 export default function Teams() {
     const { t } = useTranslation()
     const { user } = useAuth()
@@ -58,6 +100,8 @@ export default function Teams() {
     const [snack, setSnack] = useState<{ msg: string; sev: 'success' | 'error' } | null>(null)
 
     const canEdit = user?.roles?.some(r => r === 0 || r === 1)
+    const theme = useTheme()
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
 
     const load = useCallback(async () => {
         setLoading(true)
@@ -156,55 +200,76 @@ export default function Teams() {
                 </Box>
             ) : (
                 <>
-                    <TableContainer component={Paper}>
-                        <Table size="small">
-                            <TableHead>
-                                <TableRow>
-                                    <TableCell>{t('team.name')}</TableCell>
-                                    <TableCell>{t('team.shortname')}</TableCell>
-                                    {canEdit && <TableCell>{t('common.actions')}</TableCell>}
-                                </TableRow>
-                            </TableHead>
-                            <TableBody>
-                                {teams.length === 0 ? (
+                    {isMobile ? (
+                        <Stack>
+                            {teams.length === 0 ? (
+                                <Typography sx={{ color: 'text.secondary', textAlign: 'center', mt: 2 }}>
+                                    {t('common.noData')}
+                                </Typography>
+                            ) : (
+                                teams.map(row => (
+                                    <TeamCard
+                                        key={row.id}
+                                        row={row}
+                                        canEdit={!!canEdit}
+                                        onEdit={() => openEdit(row)}
+                                        onDelete={() => handleDelete(row.id)}
+                                        onClick={() => navigate(`/teams/${row.id}`)}
+                                    />
+                                ))
+                            )}
+                        </Stack>
+                    ) : (
+                        <TableContainer component={Paper}>
+                            <Table size="small">
+                                <TableHead>
                                     <TableRow>
-                                        <TableCell colSpan={3} align="center">
-                                            {t('common.noData')}
-                                        </TableCell>
+                                        <TableCell>{t('team.name')}</TableCell>
+                                        <TableCell>{t('team.shortname')}</TableCell>
+                                        {canEdit && <TableCell>{t('common.actions')}</TableCell>}
                                     </TableRow>
-                                ) : (
-                                    teams.map(row => (
-                                        <TableRow
-                                            key={row.id}
-                                            hover
-                                            sx={{ cursor: 'pointer' }}
-                                            onClick={() => navigate(`/teams/${row.id}`)}
-                                        >
-                                            <TableCell>{row.name}</TableCell>
-                                            <TableCell>{row.shortname}</TableCell>
-                                            {canEdit && (
-                                                <TableCell onClick={e => e.stopPropagation()}>
-                                                    <IconButton
-                                                        size="small"
-                                                        onClick={() => openEdit(row)}
-                                                    >
-                                                        <EditIcon fontSize="small" />
-                                                    </IconButton>
-                                                    <IconButton
-                                                        size="small"
-                                                        color="error"
-                                                        onClick={() => handleDelete(row.id)}
-                                                    >
-                                                        <DeleteIcon fontSize="small" />
-                                                    </IconButton>
-                                                </TableCell>
-                                            )}
+                                </TableHead>
+                                <TableBody>
+                                    {teams.length === 0 ? (
+                                        <TableRow>
+                                            <TableCell colSpan={3} align="center">
+                                                {t('common.noData')}
+                                            </TableCell>
                                         </TableRow>
-                                    ))
-                                )}
-                            </TableBody>
-                        </Table>
-                    </TableContainer>
+                                    ) : (
+                                        teams.map(row => (
+                                            <TableRow
+                                                key={row.id}
+                                                hover
+                                                sx={{ cursor: 'pointer' }}
+                                                onClick={() => navigate(`/teams/${row.id}`)}
+                                            >
+                                                <TableCell>{row.name}</TableCell>
+                                                <TableCell>{row.shortname}</TableCell>
+                                                {canEdit && (
+                                                    <TableCell onClick={e => e.stopPropagation()}>
+                                                        <IconButton
+                                                            size="small"
+                                                            onClick={() => openEdit(row)}
+                                                        >
+                                                            <EditIcon fontSize="small" />
+                                                        </IconButton>
+                                                        <IconButton
+                                                            size="small"
+                                                            color="error"
+                                                            onClick={() => handleDelete(row.id)}
+                                                        >
+                                                            <DeleteIcon fontSize="small" />
+                                                        </IconButton>
+                                                    </TableCell>
+                                                )}
+                                            </TableRow>
+                                        ))
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
+                    )}
                     <Box
                         sx={{
                             display: 'flex',
