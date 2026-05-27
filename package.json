@@ -15,16 +15,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@gitlab.com/mariusz.jarocki/paw2026z.git"
+    "url": "git+https://github.com/urban1991/web-application-design.git"
   },
   "keywords": [],
-  "author": "",
+  "author": "urban1991",
   "license": "ISC",
   "type": "commonjs",
   "bugs": {
-    "url": "https://gitlab.com/mariusz.jarocki/paw2026z/issues"
+    "url": "https://github.com/urban1991/web-application-design/issues"
   },
-  "homepage": "https://gitlab.com/mariusz.jarocki/paw2026z#readme",
+  "homepage": "https://github.com/urban1991/web-application-design#readme",
   "dependencies": {
     "@faker-js/faker": "^10.3.0",
     "@types/connect-sqlite3": "^0.9.6",
