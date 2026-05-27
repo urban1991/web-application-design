@@ -1,0 +1,841 @@
+openapi: 3.0.3
+info:
+  title: Tournament Management API
+  description: REST API dla systemu zarządzania turniejami sportowymi
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:4000/api
+    description: Development
+
+tags:
+  - name: auth
+    description: Uwierzytelnianie i sesje
+  - name: tournaments
+    description: Zarządzanie turniejami
+  - name: teams
+    description: Zarządzanie drużynami
+  - name: players
+    description: Zarządzanie zawodnikami
+  - name: matches
+    description: Mecze i wyniki
+  - name: import
+    description: Import danych z pliku
+  - name: audit
+    description: Dziennik audytu
+  - name: settings
+    description: Ustawienia użytkownika i MFA
+
+paths:
+  # --- AUTH ---
+  /auth/login:
+    post:
+      tags: [auth]
+      summary: Logowanie
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password]
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+                mfa_token:
+                  type: string
+                  description: Kod TOTP (wymagany gdy mfa_enabled=true)
+      responses:
+        '200':
+          description: Zalogowano lub wymagane MFA
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/UserSession'
+                  - type: object
+                    properties:
+                      mfa_required:
+                        type: boolean
+                        example: true
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/logout:
+    post:
+      tags: [auth]
+      summary: Wylogowanie
+      responses:
+        '200':
+          description: Wylogowano
+
+  /auth/me:
+    get:
+      tags: [auth]
+      summary: Dane zalogowanego użytkownika
+      responses:
+        '200':
+          description: Dane użytkownika lub null
+          content:
+            application/json:
+              schema:
+                nullable: true
+                $ref: '#/components/schemas/UserSession'
+
+  # --- TOURNAMENTS ---
+  /tournament:
+    get:
+      tags: [tournaments]
+      summary: Lista turniejów z paginacją i FTS
+      parameters:
+        - name: q
+          in: query
+          description: Wyszukiwanie pełnotekstowe (name, sport)
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: Lista turniejów
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedTournaments'
+    post:
+      tags: [tournaments]
+      summary: Utwórz turniej
+      security: [{ session: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TournamentInput'
+      responses:
+        '200':
+          description: Utworzony turniej
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tournament'
+    put:
+      tags: [tournaments]
+      summary: Zaktualizuj turniej
+      security: [{ session: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/TournamentInput'
+                - required: [id]
+                  properties:
+                    id:
+                      type: integer
+      responses:
+        '200':
+          description: Zaktualizowany turniej
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tournament'
+
+  /tournament/{id}:
+    get:
+      tags: [tournaments]
+      summary: Pobierz turniej po ID
+      security: [{ session: [] }]
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: Turniej
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tournament'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [tournaments]
+      summary: Usuń turniej (tylko admin)
+      security: [{ session: [] }]
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: Usunięty turniej
+
+  /tournament/{id}/register-team:
+    post:
+      tags: [tournaments]
+      summary: Zapisz drużynę do turnieju
+      security: [{ session: [] }]
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [team_id]
+              properties:
+                team_id:
+                  type: integer
+      responses:
+        '200':
+          description: Zapis potwierdzony
+
+  /tournament/{id}/team/{teamId}:
+    delete:
+      tags: [tournaments]
+      summary: Wypisz drużynę z turnieju
+      security: [{ session: [] }]
+      parameters:
+        - $ref: '#/components/parameters/id'
+        - name: teamId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Wypisano drużynę
+
+  /tournament/{id}/generate-bracket:
+    post:
+      tags: [tournaments]
+      summary: Generuj drabinkę turnieju
+      security: [{ session: [] }]
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: Drabinka wygenerowana
+
+  /tournament/{id}/bracket:
+    get:
+      tags: [tournaments]
+      summary: Dane drabinki turnieju
+      security: [{ session: [] }]
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: Lista meczów z nazwami drużyn
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MatchWithTeams'
+
+  /tournament/{id}/standings:
+    get:
+      tags: [tournaments]
+      summary: Tabela wyników turnieju
+      security: [{ session: [] }]
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: Tabela wyników
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    name:
+                      type: string
+                    shortname:
+                      type: string
+                    wins:
+                      type: integer
+
+  /tournament/{id}/pdf:
+    get:
+      tags: [tournaments]
+      summary: Pobierz raport PDF turnieju
+      security: [{ session: [] }]
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: Plik PDF
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+
+  # --- TEAMS ---
+  /team:
+    get:
+      tags: [teams]
+      summary: Lista drużyn
+      parameters:
+        - name: q
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: Lista drużyn
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedTeams'
+    post:
+      tags: [teams]
+      summary: Utwórz drużynę
+      security: [{ session: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeamInput'
+      responses:
+        '200':
+          description: Utworzona drużyna
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Team'
+    put:
+      tags: [teams]
+      summary: Zaktualizuj drużynę
+      security: [{ session: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/TeamInput'
+                - required: [id]
+                  properties:
+                    id:
+                      type: integer
+      responses:
+        '200':
+          description: Zaktualizowana drużyna
+
+  /team/{id}:
+    get:
+      tags: [teams]
+      summary: Pobierz drużynę z zawodnikami
+      security: [{ session: [] }]
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: Drużyna z listą zawodników
+    delete:
+      tags: [teams]
+      summary: Usuń drużynę (tylko admin)
+      security: [{ session: [] }]
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: Usunięta drużyna
+
+  # --- PLAYERS ---
+  /player:
+    get:
+      tags: [players]
+      summary: Lista zawodników
+      parameters:
+        - name: q
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: Lista zawodników
+    post:
+      tags: [players]
+      summary: Dodaj zawodnika
+      security: [{ session: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlayerInput'
+      responses:
+        '200':
+          description: Dodany zawodnik
+    put:
+      tags: [players]
+      summary: Zaktualizuj zawodnika
+      security: [{ session: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/PlayerInput'
+                - required: [id]
+                  properties:
+                    id:
+                      type: integer
+      responses:
+        '200':
+          description: Zaktualizowany zawodnik
+
+  /player/{id}:
+    get:
+      tags: [players]
+      summary: Pobierz zawodnika
+      security: [{ session: [] }]
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: Zawodnik
+    delete:
+      tags: [players]
+      summary: Usuń zawodnika
+      security: [{ session: [] }]
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: Usunięty zawodnik
+
+  # --- MATCHES ---
+  /match/{id}/score:
+    put:
+      tags: [matches]
+      summary: Aktualizuj wynik meczu
+      security: [{ session: [] }]
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [score1, score2]
+              properties:
+                score1:
+                  type: integer
+                score2:
+                  type: integer
+      responses:
+        '200':
+          description: Zaktualizowany mecz
+
+  # --- IMPORT ---
+  /import/teams:
+    post:
+      tags: [import]
+      summary: Importuj drużyny z pliku CSV lub JSON
+      security: [{ session: [] }]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Wynik importu
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportResult'
+
+  /import/players:
+    post:
+      tags: [import]
+      summary: Importuj zawodników z pliku CSV lub JSON
+      security: [{ session: [] }]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Wynik importu
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportResult'
+
+  # --- AUDIT ---
+  /audit:
+    get:
+      tags: [audit]
+      summary: Dziennik audytu (tylko admin)
+      security: [{ session: [] }]
+      parameters:
+        - name: entity
+          in: query
+          schema:
+            type: string
+            enum: [tournament, team, match, player]
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: Wpisy audytu
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total:
+                    type: integer
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AuditEntry'
+
+  # --- SETTINGS ---
+  /settings/preferences:
+    put:
+      tags: [settings]
+      summary: Zapisz preferencje użytkownika (motyw, język)
+      security: [{ session: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                theme:
+                  type: string
+                  enum: [light, dark]
+                language:
+                  type: string
+                  enum: [pl, en]
+      responses:
+        '200':
+          description: Preferencje zapisane
+
+  /settings/mfa/setup:
+    get:
+      tags: [settings]
+      summary: Generuj sekret TOTP i QR code
+      security: [{ session: [] }]
+      responses:
+        '200':
+          description: Sekret i URL do QR code
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  secret:
+                    type: string
+                  otpauth_url:
+                    type: string
+
+  /settings/mfa/verify:
+    post:
+      tags: [settings]
+      summary: Aktywuj MFA po weryfikacji kodu TOTP
+      security: [{ session: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token]
+              properties:
+                token:
+                  type: string
+      responses:
+        '200':
+          description: MFA aktywowane
+        '400':
+          description: Nieprawidłowy kod TOTP
+
+  /settings/mfa/disable:
+    post:
+      tags: [settings]
+      summary: Wyłącz MFA
+      security: [{ session: [] }]
+      responses:
+        '200':
+          description: MFA wyłączone
+
+components:
+  parameters:
+    id:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+
+  responses:
+    Unauthorized:
+      description: Brak autoryzacji
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: Nie znaleziono
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  securitySchemes:
+    session:
+      type: apiKey
+      in: cookie
+      name: connect.sid
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+
+    UserSession:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        roles:
+          type: array
+          items:
+            type: integer
+        theme:
+          type: string
+        language:
+          type: string
+        mfa_enabled:
+          type: integer
+
+    Tournament:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        sport:
+          type: string
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        status:
+          type: string
+          enum: [draft, active, finished]
+        created_by:
+          type: integer
+
+    TournamentInput:
+      type: object
+      required: [name, sport]
+      properties:
+        name:
+          type: string
+        sport:
+          type: string
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        status:
+          type: string
+          enum: [draft, active, finished]
+
+    PaginatedTournaments:
+      type: object
+      properties:
+        total:
+          type: integer
+        filtered:
+          type: integer
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Tournament'
+
+    Team:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        shortname:
+          type: string
+        captain_id:
+          type: integer
+
+    TeamInput:
+      type: object
+      required: [name, shortname]
+      properties:
+        name:
+          type: string
+        shortname:
+          type: string
+        captain_id:
+          type: integer
+
+    PaginatedTeams:
+      type: object
+      properties:
+        total:
+          type: integer
+        filtered:
+          type: integer
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Team'
+
+    PlayerInput:
+      type: object
+      required: [firstname, lastname]
+      properties:
+        firstname:
+          type: string
+        lastname:
+          type: string
+        position:
+          type: string
+        team_id:
+          type: integer
+
+    MatchWithTeams:
+      type: object
+      properties:
+        id:
+          type: integer
+        tournament_id:
+          type: integer
+        round:
+          type: integer
+        match_number:
+          type: integer
+        team1_id:
+          type: integer
+        team2_id:
+          type: integer
+        team1_name:
+          type: string
+        team2_name:
+          type: string
+        score1:
+          type: integer
+        score2:
+          type: integer
+        status:
+          type: string
+          enum: [scheduled, inProgress, finished]
+        winner_id:
+          type: integer
+        winner_name:
+          type: string
+        next_match_id:
+          type: integer
+
+    ImportResult:
+      type: object
+      properties:
+        inserted:
+          type: integer
+        data:
+          type: array
+          items:
+            type: object
+
+    AuditEntry:
+      type: object
+      properties:
+        id:
+          type: integer
+        entity:
+          type: string
+        entity_id:
+          type: integer
+        action:
+          type: string
+          enum: [create, update, delete]
+        old_value:
+          type: string
+        new_value:
+          type: string
+        changed_by:
+          type: integer
+        changed_at:
+          type: string
+          format: date-time
