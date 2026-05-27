@@ -30,14 +30,14 @@ function makeApp() {
     app.use(passport.session());
 
     passport.use(new LocalStrategy(async (username, password, done) => {
-        const row = db.prepare('SELECT * FROM users WHERE username = ?').get(username) as any;
+        const row = db.prepare('SELECT * FROM users WHERE username = ?').get(username as string) as any;
         if (!row) return done(null, false, { message: 'Incorrect credentials' });
         if (!bcrypt.compareSync(password, row.password_hash)) return done(null, false, { message: 'Incorrect credentials' });
         done(null, { id: row.id, username: row.username, roles: JSON.parse(row.roles) });
     }));
     passport.serializeUser((user: any, done) => done(null, user.id));
-    passport.deserializeUser((id, done) => {
-        const row = db.prepare('SELECT * FROM users WHERE id = ?').get(id) as any;
+    passport.deserializeUser((id: any, done) => {
+        const row = db.prepare('SELECT * FROM users WHERE id = ?').get(id as number) as any;
         done(null, { id: row.id, username: row.username, roles: JSON.parse(row.roles) });
     });
 
