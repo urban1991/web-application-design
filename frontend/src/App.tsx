@@ -1,5 +1,5 @@
 import { ThemeProvider, CssBaseline } from '@mui/material'
-import React from 'react'
+import React, { createContext, useContext } from 'react'
 import { useMemo, useState, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import Layout from './components/Layout'
@@ -17,6 +17,15 @@ import Teams from './pages/Teams'
 import TournamentDetail from './pages/TournamentDetail'
 import Tournaments from './pages/Tournaments'
 import { buildTheme } from './theme'
+
+export const ThemeModeContext = createContext<{
+    themeMode: 'light' | 'dark'
+    setThemeMode: (mode: 'light' | 'dark') => void
+}>({ themeMode: 'light', setThemeMode: () => {} })
+
+export function useThemeMode() {
+    return useContext(ThemeModeContext)
+}
 
 export default function App() {
     const auth = useAuthProvider()
@@ -49,32 +58,34 @@ export default function App() {
 
     return (
         <AuthContext value={auth}>
-            <ThemeProvider theme={theme}>
-                <CssBaseline />
-                <BrowserRouter>
-                    <Routes>
-                        <Route path="/login" element={<Login />} />
-                        <Route element={<ProtectedRoute />}>
-                            <Route
-                                element={
-                                    <Layout themeMode={themeMode} onToggleTheme={toggleTheme} />
-                                }
-                            >
-                                <Route path="/" element={<Dashboard />} />
-                                <Route path="/tournaments" element={<Tournaments />} />
-                                <Route path="/tournaments/:id" element={<TournamentDetail />} />
-                                <Route path="/teams" element={<Teams />} />
-                                <Route path="/teams/:id" element={<TeamDetail />} />
-                                <Route path="/players" element={<Players />} />
-                                <Route path="/import" element={<ImportPage />} />
-                                <Route path="/audit" element={<Audit />} />
-                                <Route path="/settings" element={<Settings />} />
+            <ThemeModeContext value={{ themeMode, setThemeMode }}>
+                <ThemeProvider theme={theme}>
+                    <CssBaseline />
+                    <BrowserRouter>
+                        <Routes>
+                            <Route path="/login" element={<Login />} />
+                            <Route element={<ProtectedRoute />}>
+                                <Route
+                                    element={
+                                        <Layout themeMode={themeMode} onToggleTheme={toggleTheme} />
+                                    }
+                                >
+                                    <Route path="/" element={<Dashboard />} />
+                                    <Route path="/tournaments" element={<Tournaments />} />
+                                    <Route path="/tournaments/:id" element={<TournamentDetail />} />
+                                    <Route path="/teams" element={<Teams />} />
+                                    <Route path="/teams/:id" element={<TeamDetail />} />
+                                    <Route path="/players" element={<Players />} />
+                                    <Route path="/import" element={<ImportPage />} />
+                                    <Route path="/audit" element={<Audit />} />
+                                    <Route path="/settings" element={<Settings />} />
+                                </Route>
                             </Route>
-                        </Route>
-                        <Route path="*" element={<Navigate to="/" replace />} />
-                    </Routes>
-                </BrowserRouter>
-            </ThemeProvider>
+                            <Route path="*" element={<Navigate to="/" replace />} />
+                        </Routes>
+                    </BrowserRouter>
+                </ThemeProvider>
+            </ThemeModeContext>
         </AuthContext>
     )
 }

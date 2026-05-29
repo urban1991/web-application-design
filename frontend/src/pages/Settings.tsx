@@ -20,11 +20,13 @@ import { QRCodeSVG } from 'qrcode.react'
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { api } from '../api/client'
+import { useThemeMode } from '../App'
 import { useAuth } from '../hooks/useAuth'
 
 export default function Settings() {
     const { t, i18n } = useTranslation()
     const { user, refresh } = useAuth()
+    const { setThemeMode } = useThemeMode()
     const [theme, setTheme] = useState<'light' | 'dark'>(
         () => (localStorage.getItem('theme') as 'light' | 'dark') ?? 'light'
     )
@@ -38,16 +40,13 @@ export default function Settings() {
     const handleThemeChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const val = e.target.value as 'light' | 'dark'
         setTheme(val)
+        setThemeMode(val)
         localStorage.setItem('theme', val)
-        // Persist server-side before reloading, otherwise the navigation can
-        // abort the in-flight request and the preference is never saved.
         try {
             await api.put('/api/settings/preferences', { theme: val })
         } catch {
-            // Local preference still applies via localStorage below.
+            // Local preference still applies via localStorage and React state.
         }
-        // Reload page to apply theme since it's managed in App.tsx state
-        window.location.reload()
     }
 
     const handleLangChange = (lang: string) => {
