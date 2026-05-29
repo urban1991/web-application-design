@@ -59,8 +59,9 @@ Otwórz **http://localhost:5173** i zaloguj się:
 
 | Login | Hasło | Rola |
 |---|---|---|
-| `admin` | `Admin123` | Administrator (0) |
-| `user`  | `User123`  | Organizator (1) |
+| `admin`   | `Admin123`   | Administrator (0) |
+| `user`    | `User123`    | Organizator (1)   |
+| `captain` | `Captain123` | Kapitan (2)       |
 
 ---
 

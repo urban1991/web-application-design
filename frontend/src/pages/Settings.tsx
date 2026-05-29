@@ -26,33 +26,36 @@ import { useAuth } from '../hooks/useAuth'
 export default function Settings() {
     const { t, i18n } = useTranslation()
     const { user, refresh } = useAuth()
-    const { setThemeMode } = useThemeMode()
-    const [theme, setTheme] = useState<'light' | 'dark'>(
-        () => (localStorage.getItem('theme') as 'light' | 'dark') ?? 'light'
-    )
+    const { themeMode, setThemeMode } = useThemeMode()
     const [qrUrl, setQrUrl] = useState<string | null>(null)
     const [totpCode, setTotpCode] = useState('')
     const [mfaLoading, setMfaLoading] = useState(false)
     const [mfaMessage, setMfaMessage] = useState<{ msg: string; sev: 'success' | 'error' } | null>(
         null
     )
+    const [prefMessage, setPrefMessage] = useState<{ msg: string; sev: 'success' | 'error' } | null>(null)
 
-    const handleThemeChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const savePreference = async (pref: { theme?: string; language?: string }) => {
+        try {
+            await api.put('/api/settings/preferences', pref)
+            setPrefMessage({ msg: t('common.success'), sev: 'success' })
+        } catch (err) {
+            console.error('Błąd zapisu preferencji:', err)
+            setPrefMessage({ msg: err instanceof Error ? err.message : t('common.error'), sev: 'error' })
+        }
+    }
+
+    const handleThemeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const val = e.target.value as 'light' | 'dark'
-        setTheme(val)
         setThemeMode(val)
         localStorage.setItem('theme', val)
-        try {
-            await api.put('/api/settings/preferences', { theme: val })
-        } catch {
-            // Local preference still applies via localStorage and React state.
-        }
+        void savePreference({ theme: val })
     }
 
     const handleLangChange = (lang: string) => {
         i18n.changeLanguage(lang)
         localStorage.setItem('language', lang)
-        api.put('/api/settings/preferences', { language: lang }).catch(() => {})
+        void savePreference({ language: lang })
     }
 
     const handleEnableMfa = async () => {
@@ -130,7 +133,7 @@ export default function Settings() {
 
                     <FormControl component="fieldset" sx={{ mb: 3, display: 'block' }}>
                         <FormLabel component="legend">{t('settings.theme')}</FormLabel>
-                        <RadioGroup row value={theme} onChange={handleThemeChange}>
+                        <RadioGroup row value={themeMode} onChange={handleThemeChange}>
                             <FormControlLabel
                                 value="light"
                                 control={<Radio />}
@@ -144,7 +147,7 @@ export default function Settings() {
                         </RadioGroup>
                     </FormControl>
 
-                    <FormControl sx={{ minWidth: 160 }}>
+                    <FormControl sx={{ minWidth: 160, mb: 2 }}>
                         <FormLabel>{t('settings.language')}</FormLabel>
                         <Select
                             value={i18n.language.startsWith('pl') ? 'pl' : 'en'}
@@ -156,6 +159,12 @@ export default function Settings() {
                             <MenuItem value="en">English</MenuItem>
                         </Select>
                     </FormControl>
+
+                    {prefMessage && (
+                        <Alert severity={prefMessage.sev} sx={{ mt: 2 }} onClose={() => setPrefMessage(null)}>
+                            {prefMessage.msg}
+                        </Alert>
+                    )}
                 </CardContent>
             </Card>
             <Card>

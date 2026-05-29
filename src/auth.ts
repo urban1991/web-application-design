@@ -21,6 +21,7 @@ declare global {
 
 async function initSysDb(filename: string, adminPassword: string, userPassword: string): Promise<DatabaseSync> {
     const db = new DatabaseSync(filename);
+    db.exec('PRAGMA journal_mode=WAL');
 
     db.exec(`CREATE TABLE IF NOT EXISTS users (
         id            INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -66,6 +67,13 @@ async function initSysDb(filename: string, adminPassword: string, userPassword: 
             JSON.stringify([1])
         );
         console.log(`Utworzono domyślnego użytkownika: user:${userPassword} (role: [1])`);
+        hash = await bcrypt.hash('Captain123', 10);
+        db.prepare('INSERT INTO users (username, password_hash, roles) VALUES (?, ?, ?)').run(
+            'captain',
+            hash,
+            JSON.stringify([2])
+        );
+        console.log(`Utworzono domyślnego kapitana: captain:Captain123 (role: [2])`);
     }
 
     return db;

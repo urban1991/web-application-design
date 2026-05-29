@@ -16,6 +16,7 @@ import TeamDetail from './pages/TeamDetail'
 import Teams from './pages/Teams'
 import TournamentDetail from './pages/TournamentDetail'
 import Tournaments from './pages/Tournaments'
+import { api } from './api/client'
 import { buildTheme } from './theme'
 
 export const ThemeModeContext = createContext<{
@@ -52,6 +53,7 @@ export default function App() {
         setThemeMode(mode => {
             const next = mode === 'light' ? 'dark' : 'light'
             localStorage.setItem('theme', next)
+            api.put('/api/settings/preferences', { theme: next }).catch(() => {})
             return next
         })
     }
