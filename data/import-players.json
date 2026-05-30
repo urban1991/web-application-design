@@ -1,0 +1,9 @@
+[
+  { "firstname": "Marek",   "lastname": "Kowalski",   "position": "Bramkarz",  "team_id": 1 },
+  { "firstname": "Piotr",   "lastname": "Nowak",      "position": "Obrońca",   "team_id": 1 },
+  { "firstname": "Tomasz",  "lastname": "Wiśniewski", "position": "Pomocnik",  "team_id": 1 },
+  { "firstname": "Łukasz",  "lastname": "Wójcik",     "position": "Napastnik", "team_id": 1 },
+  { "firstname": "Michał",  "lastname": "Kowalczyk",  "position": "Obrońca",   "team_id": 2 },
+  { "firstname": "Kamil",   "lastname": "Zieliński",  "position": "Pomocnik",  "team_id": 2 },
+  { "firstname": "Bartosz", "lastname": "Szymański",  "position": "Napastnik", "team_id": 2 }
+]
