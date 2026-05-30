@@ -3,6 +3,7 @@ import { DatabaseSync } from 'node:sqlite';
 import passport from 'passport';
 import createError from 'http-errors';
 import speakeasy from 'speakeasy';
+import bcrypt from 'bcryptjs';
 
 // Carry the pending-MFA user id in the session between the two login steps.
 declare module 'express-session' {
@@ -112,6 +113,37 @@ export function authRouter(sysDb: DatabaseSync): Router {
             | { theme: string; language: string; mfa_enabled: number }
             | undefined;
         res.json({ id: req.user!.id, username: req.user!.username, roles: req.user!.roles, ...prefs });
+    });
+
+    // POST /api/auth/register
+    router.post('/register', async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { username, password, role, email } = req.body as { username?: string; password?: string; role?: number; email?: string };
+            if (!username || typeof username !== 'string' || !username.trim()) {
+                return next(createError(400, 'Nazwa użytkownika jest wymagana'));
+            }
+            if (!password || typeof password !== 'string' || password.length < 6) {
+                return next(createError(400, 'Hasło musi mieć minimum 6 znaków'));
+            }
+            if (role !== 1 && role !== 2) {
+                return next(createError(400, 'Nieprawidłowa rola'));
+            }
+            const hash = await bcrypt.hash(password, 10);
+            let created: unknown;
+            try {
+                const emailVal = email && typeof email === 'string' && email.trim() ? email.trim() : null;
+                created = sysDb
+                    .prepare('INSERT INTO users (username, password_hash, roles, email) VALUES (?, ?, ?, ?) RETURNING id, username, roles, email')
+                    .get(username.trim(), hash, JSON.stringify([role]), emailVal);
+            } catch (e: unknown) {
+                const msg = e instanceof Error ? e.message : '';
+                if (msg.includes('UNIQUE')) return next(createError(400, 'Nazwa użytkownika jest już zajęta'));
+                throw e;
+            }
+            res.status(201).json(created);
+        } catch (err) {
+            next(err);
+        }
     });
 
     return router;

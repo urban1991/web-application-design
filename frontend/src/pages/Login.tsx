@@ -10,7 +10,7 @@ import {
 } from '@mui/material'
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 
 export default function Login() {
@@ -24,6 +24,8 @@ export default function Login() {
     const [mfaStep, setMfaStep] = useState(false)
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
+    const location = useLocation()
+    const registered = new URLSearchParams(location.search).get('registered') === '1'
 
     const handleSubmit = async (e: React.SubmitEvent) => {
         e.preventDefault()
@@ -65,6 +67,12 @@ export default function Login() {
                     >
                         Tournament Manager
                     </Typography>
+
+                    {registered && (
+                        <Alert severity="success" sx={{ mb: 2 }}>
+                            {t('auth.registerSuccess')}
+                        </Alert>
+                    )}
 
                     {error && (
                         <Alert severity="error" sx={{ mb: 2 }}>
@@ -135,6 +143,12 @@ export default function Login() {
                         >
                             {loading ? <CircularProgress size={24} /> : t('auth.login')}
                         </Button>
+
+                        <Typography variant="body2" sx={{ textAlign: 'center', mt: 1 }}>
+                            <Link to="/register" style={{ color: 'inherit' }}>
+                                {t('auth.noAccount')}
+                            </Link>
+                        </Typography>
                     </Box>
                 </CardContent>
             </Card>

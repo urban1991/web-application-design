@@ -2,6 +2,7 @@ import { ThemeProvider, CssBaseline } from '@mui/material'
 import React, { createContext, useContext } from 'react'
 import { useMemo, useState, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { api } from './api/client'
 import Layout from './components/Layout'
 import ProtectedRoute from './components/ProtectedRoute'
 import { AuthContext, useAuthProvider } from './hooks/useAuth'
@@ -11,12 +12,12 @@ import Dashboard from './pages/Dashboard'
 import ImportPage from './pages/ImportPage'
 import Login from './pages/Login'
 import Players from './pages/Players'
+import Register from './pages/Register'
 import Settings from './pages/Settings'
 import TeamDetail from './pages/TeamDetail'
 import Teams from './pages/Teams'
 import TournamentDetail from './pages/TournamentDetail'
 import Tournaments from './pages/Tournaments'
-import { api } from './api/client'
 import { buildTheme } from './theme'
 
 export const ThemeModeContext = createContext<{
@@ -66,6 +67,7 @@ export default function App() {
                     <BrowserRouter>
                         <Routes>
                             <Route path="/login" element={<Login />} />
+                            <Route path="/register" element={<Register />} />
                             <Route element={<ProtectedRoute />}>
                                 <Route
                                     element={

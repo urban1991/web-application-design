@@ -1,13 +1,5 @@
 import { DatabaseSync } from 'node:sqlite';
 
-export interface MatchRow {
-    tournament_id: number;
-    round: number;
-    match_number: number;
-    team1_id: number | null;
-    team2_id: number | null;
-}
-
 function nextPow2(n: number): number {
     let p = 1;
     while (p < n) p *= 2;

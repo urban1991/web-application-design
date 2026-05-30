@@ -9,17 +9,16 @@ Aplikacja webowa do zarządzania turniejami sportowymi: tworzenie turniejów, za
 ## Stack technologiczny
 
 **Backend** (`src/`)
-- Node.js 22+ z wbudowanym `node:sqlite` (SQLite z FTS5)
+- Node.js 22+ z wbudowanym `node:sqlite` (SQLite z FTS5, tryb WAL)
 - Express 5 + Passport (sesje + LocalStrategy)
 - bcryptjs (hasła), speakeasy (MFA/TOTP)
 - nodemailer (powiadomienia mailowe), pdfkit (raporty PDF), ws (WebSocket)
 - CSRF: double-submit cookie
 
 **Frontend** (`frontend/`)
-- React 18 + TypeScript + Vite
+- React 19 + TypeScript + Vite
 - MUI (Material UI) — komponenty UI + tryb ciemny/jasny
-- react-router-dom v6, i18next (PL/EN), chart.js (wykresy na dashboardzie)
-- axios (klient HTTP)
+- react-router-dom v7, i18next (PL/EN), chart.js (wykresy na dashboardzie)
 
 **Testy** (`tests/`) — vitest + supertest + better-sqlite3 (shim dla `node:sqlite`).
 
@@ -45,8 +44,8 @@ nvm use
 npm install
 cd frontend && npm install && cd ..
 
-# 2. zainicjuj bazę danych (tworzy data/app.sqlite3 + seeduje 16 drużyn i 4 turnieje)
-node tools/createdb.mjs
+# 2. zainicjuj bazę danych (tworzy data/app.sqlite3 + seeduje 40 drużyn i 12 turniejów)
+npm run createdb
 
 # 3. uruchom backend (port 4000)
 npm run dev
@@ -57,8 +56,8 @@ cd frontend && npm run dev
 
 Otwórz **http://localhost:5173** i zaloguj się:
 
-| Login | Hasło | Rola |
-|---|---|---|
+| Login     | Hasło        | Rola              |
+|-----------|--------------|-------------------|
 | `admin`   | `Admin123`   | Administrator (0) |
 | `user`    | `User123`    | Organizator (1)   |
 | `captain` | `Captain123` | Kapitan (2)       |
@@ -92,9 +91,19 @@ Backend serwuje zbudowany SPA z `frontend/dist` na porcie 4000. W produkcji **wy
 | `SESSION_SECRET` | tylko prod | Sekret podpisywania ciasteczek sesji |
 | `ADMIN_PASSWORD` | tylko prod | Hasło dla seedowanego konta `admin` |
 | `USER_PASSWORD` | tylko prod | Hasło dla seedowanego konta `user` |
-
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` | nie | Konfiguracja SMTP. Bez tego maile są pomijane bezgłośnie |
 | `NODE_ENV` | nie | `production` włącza secure cookies, fail-fast na brak secretów, log-only error messages |
+
+### Testowanie maili lokalnie (Mailpit)
+
+```
+# .env
+SMTP_HOST=localhost
+SMTP_PORT=1025
+SMTP_FROM=noreply@paw.local
+```
+
+Uruchom `.\mailpit.exe` (plik w katalogu projektu), webUI dostępne na **http://localhost:8025**.
 
 ---
 
@@ -116,11 +125,12 @@ Backend serwuje zbudowany SPA z `frontend/dist` na porcie 4000. W produkcji **wy
 - ✅ **Paginacja** serwerowa z limit/offset dla dużych zbiorów
 - ✅ **WebSockets** — live update wyników i drabinki (kanał `tournament:{id}`)
 - ✅ **MFA/TOTP** — speakeasy + QR code; **CSRF** — double-submit cookie
-- ✅ **Tryb ciemny/jasny** z zapisem preferencji w bazie i localStorage
+- ✅ **Tryb ciemny/jasny** z zapisem preferencji w bazie i localStorage, zsynchronizowany między belką nawigacyjną a stroną ustawień
 - ✅ **Responsywność** — MUI Drawer (hamburger na mobile, permanent na desktop)
 - ✅ **Powiadomienia mailowe** — przy zapisie do turnieju, generacji drabinki, aktualizacji wyniku (z rate-limit per recipient)
 - ✅ **Wielojęzyczność** — i18next, PL/EN
 - ✅ **Testy automatyczne** — 33 przypadki testowe (vitest + supertest)
+- ✅ **Rejestracja użytkowników** — otwarty formularz rejestracji z wyborem roli (Kapitan/Organizator)
 
 ---
 
@@ -140,7 +150,7 @@ Aktualnie: **33 testy** w 3 plikach pokrywają CRUD turniejów, generację drabi
 .
 ├── src/                  # Backend (TypeScript)
 │   ├── index.ts          # Bootstrap Express, sesje, CSRF, SPA fallback
-│   ├── auth.ts           # Passport LocalStrategy + requireAuth
+│   ├── auth.ts           # Passport LocalStrategy + requireAuth + rejestracja
 │   ├── bracket.ts        # generateBracket + advanceWinner
 │   ├── websocket.ts      # PubSub na kanałach
 │   ├── email.ts          # nodemailer + escapeHtml + rate limit
@@ -150,7 +160,7 @@ Aktualnie: **33 testy** w 3 plikach pokrywają CRUD turniejów, generację drabi
 │   └── api/              # Routery: tournament, team, player, match, import, audit, settings, auth
 ├── frontend/             # React + Vite + MUI
 │   ├── src/
-│   │   ├── pages/        # Dashboard, Tournaments, TournamentDetail, Teams, Players, Import, Audit, Settings, Login
+│   │   ├── pages/        # Dashboard, Tournaments, TournamentDetail, Teams, Players, Import, Audit, Settings, Login, Register
 │   │   ├── components/   # BracketView, MatchCard, Layout, ThemeToggle, LanguageSwitcher
 │   │   ├── hooks/        # useAuth, useWebSocket
 │   │   ├── api/          # client.ts (z auto CSRF)
@@ -158,11 +168,13 @@ Aktualnie: **33 testy** w 3 plikach pokrywają CRUD turniejów, generację drabi
 │   │   ├── theme.ts      # MUI motyw (light/dark)
 │   │   └── i18n.ts       # i18next config
 ├── tests/                # vitest + supertest + better-sqlite3 shim
-├── tools/createdb.mjs    # Inicjalizacja schematu + seed
+├── tools/createdb.mjs    # Inicjalizacja schematu + seed (40 drużyn, 6 zawodników, 12 turniejów)
 ├── docs/
 │   ├── database-diagram.md   # ER diagram (Mermaid)
-│   └── api-spec.yaml         # OpenAPI 3.0
-└── data/app.sqlite3      # Baza SQLite (gitignored)
+│   ├── api-spec.yaml         # OpenAPI 3.0
+│   └── superpowers/          # Specyfikacje i plany implementacji
+├── data/app.sqlite3      # Baza SQLite — dane aplikacji (gitignored)
+└── data/sys.sqlite3      # Baza SQLite — użytkownicy i sesje (gitignored, WAL mode)
 ```
 
 ---
@@ -173,12 +185,14 @@ Zaimplementowane:
 - Hasła w bcrypt (cost 10), MFA TOTP (speakeasy)
 - Sesje na cookies z `httpOnly`, `secure` (prod), `sameSite: 'lax'`
 - CSRF: double-submit cookie (`csrf_token` + `X-CSRF-Token`)
+- SQLite WAL mode na `sys.sqlite3` — eliminuje blokady przy równoczesnych połączeniach
 - Eskejpowanie HTML w wychodzących mailach
 - Sanityzacja zapytań FTS5
 - Walidacja typu pliku przez sniffing (nie tylko mimetype)
 - Mass-assignment protection: `id` z URL, `created_by` z sesji
 - Foreign keys + transakcje na operacjach krytycznych (aktualizacja wyniku, generacja drabinki)
 - Error handler ukrywa szczegóły w produkcji
+- Rate limiting logowania (10 prób / 15 min per IP)
 
 ---
 

@@ -3,9 +3,9 @@ import { fakerPL as faker } from '@faker-js/faker';
 
 const config = {
     dbfilename: './data/app.sqlite3',
-    FAKE_TEAMS: 16,
-    FAKE_PLAYERS_PER_TEAM: 5,
-    FAKE_TOURNAMENTS: 4,
+    FAKE_TEAMS: 40,
+    FAKE_PLAYERS_PER_TEAM: 6,
+    FAKE_TOURNAMENTS: 12,
 };
 
 console.log('createdb — tournament management');
@@ -140,7 +140,7 @@ if (!user_version) {
         const start = faker.date.soon({ days: 30 }).toISOString().split('T')[0];
         const end = faker.date.soon({ days: 60, refDate: new Date(start) }).toISOString().split('T')[0];
         const statuses = ['active', 'draft', 'draft', 'finished'];
-        const t = insertTournament.get(`Turniej ${sport} 2026`, sport, start, end, statuses[i]);
+        const t = insertTournament.get(`Turniej ${sport} 2026`, sport, start, end, statuses[i % statuses.length]);
         const slice = teamIds.slice(i * 4, i * 4 + 8);
         slice.forEach((tid, idx) => insertTT.run(t.id, tid, idx + 1));
     }

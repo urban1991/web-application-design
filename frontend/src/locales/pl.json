@@ -70,7 +70,17 @@
     "login": "Zaloguj się",
     "mfaToken": "Kod MFA",
     "mfaRequired": "Wymagane uwierzytelnienie dwuskładnikowe",
-    "enterMfa": "Podaj 6-cyfrowy kod TOTP"
+    "enterMfa": "Podaj 6-cyfrowy kod TOTP",
+    "register": "Zarejestruj się",
+    "confirmPassword": "Powtórz hasło",
+    "role": "Rola",
+    "roleCapitan": "Kapitan",
+    "roleOrganizer": "Organizator",
+    "passwordMismatch": "Hasła nie są identyczne",
+    "passwordTooShort": "Hasło musi mieć minimum 6 znaków",
+    "alreadyHaveAccount": "Masz już konto? Zaloguj się",
+    "noAccount": "Nie masz konta? Zarejestruj się",
+    "registerSuccess": "Konto utworzone. Możesz się zalogować."
   },
   "common": {
     "save": "Zapisz",

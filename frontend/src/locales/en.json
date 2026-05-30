@@ -70,7 +70,17 @@
     "login": "Login",
     "mfaToken": "MFA Code",
     "mfaRequired": "Two-factor authentication required",
-    "enterMfa": "Enter 6-digit TOTP code"
+    "enterMfa": "Enter 6-digit TOTP code",
+    "register": "Register",
+    "confirmPassword": "Confirm password",
+    "role": "Role",
+    "roleCapitan": "Captain",
+    "roleOrganizer": "Organizer",
+    "passwordMismatch": "Passwords do not match",
+    "passwordTooShort": "Password must be at least 6 characters",
+    "alreadyHaveAccount": "Already have an account? Log in",
+    "noAccount": "Don't have an account? Register",
+    "registerSuccess": "Account created. You can now log in."
   },
   "common": {
     "save": "Save",

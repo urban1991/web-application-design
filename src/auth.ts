@@ -79,7 +79,7 @@ async function initSysDb(filename: string, adminPassword: string, userPassword: 
     return db;
 }
 
-// --- Konfiguracja passport i sesji ---
+// --- Configuration passport and session ---
 
 export async function initAuth(
     app: Application,
